@@ -16,12 +16,20 @@ class AttendanceController extends Controller
      */
     public function index(): JsonResponse
     {
-        $attendance = Attendance::with('employee')->get();
+        try {
+            $attendance = Attendance::with('employee')->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $attendance,
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $attendance,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching attendance: ' . $e->getMessage(),
+                'data' => [],
+            ], 500);
+        }
     }
 
     /**
@@ -175,20 +183,32 @@ class AttendanceController extends Controller
      */
     public function today(): JsonResponse
     {
-        $today = now()->toDateString();
+        try {
+            $today = now()->toDateString();
 
-        $totalCheckIns = Attendance::where('date', $today)->count();
-        $activeToday = Attendance::where('date', $today)
-            ->whereNull('check_out_time')
-            ->count();
+            $totalCheckIns = Attendance::where('date', $today)->count();
+            $activeToday = Attendance::where('date', $today)
+                ->whereNull('check_out_time')
+                ->count();
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'date' => $today,
-                'total_check_ins' => $totalCheckIns,
-                'active_today' => $activeToday,
-            ],
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'date' => $today,
+                    'total_check_ins' => $totalCheckIns,
+                    'active_today' => $activeToday,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching today summary: ' . $e->getMessage(),
+                'data' => [
+                    'date' => now()->toDateString(),
+                    'total_check_ins' => 0,
+                    'active_today' => 0,
+                ],
+            ], 500);
+        }
     }
 }
