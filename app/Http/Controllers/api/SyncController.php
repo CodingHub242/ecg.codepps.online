@@ -44,19 +44,26 @@ class SyncController extends Controller
      */
     public function addDeletedEmployee(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'employee_id' => 'required|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'employee_id' => 'required|string',
+            ]);
 
-        DeletedEmployee::create([
-            'employee_id' => $validated['employee_id'],
-            'deleted_at' => now(),
-        ]);
+            DeletedEmployee::create([
+                'employee_id' => $validated['employee_id'],
+                'deleted_at' => now(),
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Deleted employee ID recorded',
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Deleted employee ID recorded',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error recording deleted employee: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -170,3 +177,5 @@ class SyncController extends Controller
         }
     }
 }
+
+  
