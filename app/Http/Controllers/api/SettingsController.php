@@ -23,7 +23,7 @@ class SettingsController extends Controller
         // If settings don't exist, create default settings
         if (!$settings) {
             $settings = Settings::create([
-                'key' => 'main',
+                'setting_key' => 'main',
                 'work_start_time' => '09:00',
                 'work_end_time' => '17:00',
                 'admin_password' => 'admin123',
@@ -73,3 +73,4 @@ class SettingsController extends Controller
         ]);
     }
 }
+
