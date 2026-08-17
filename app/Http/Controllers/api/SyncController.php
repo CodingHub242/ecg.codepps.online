@@ -20,12 +20,20 @@ class SyncController extends Controller
      */
     public function getDeletedEmployees(): JsonResponse
     {
-        $deletedIds = DeletedEmployee::pluck('employee_id')->toArray();
+        try {
+            $deletedIds = DeletedEmployee::pluck('employee_id')->toArray();
 
-        return response()->json([
-            'success' => true,
-            'data' => $deletedIds,
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $deletedIds,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching deleted employees: ' . $e->getMessage(),
+                'data' => [],
+            ], 500);
+        }
     }
 
     /**
