@@ -20,32 +20,39 @@ class AuthController extends Controller
      */
     public function login(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'password' => 'required|string',
-        ]);
+        try {
+            $validated = $request->validate([
+                'password' => 'required|string',
+            ]);
 
-        // Check the users table for an admin user with matching password
-        $admin = User::where('is_admin', true)->first();
+            // Check the users table for an admin user with matching password
+            $admin = User::where('is_admin', true)->first();
 
-        if (!$admin || !Hash::check($validated['password'], $admin->password)) {
+            if (!$admin || !Hash::check($validated['password'], $admin->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid password. Please try again.',
+                ], 401);
+            }
+
+            // Generate a simple API token for the admin session
+            $token = bin2hex(random_bytes(32));
+
+            // Also fetch settings to return to the client
+            $settings = Settings::getMain();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Login successful',
+                'token' => $token,
+                'settings' => $settings,
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid password. Please try again.',
-            ], 401);
+                'message' => 'Login error: ' . $e->getMessage(),
+            ], 500);
         }
-
-        // Generate a simple API token for the admin session
-        $token = bin2hex(random_bytes(32));
-
-        // Also fetch settings to return to the client
-        $settings = Settings::getMain();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Login successful',
-            'token' => $token,
-            'settings' => $settings,
-        ]);
     }
 
     /**
@@ -54,18 +61,25 @@ class AuthController extends Controller
      */
     public function me(): JsonResponse
     {
-        $settings = Settings::getMain();
+        try {
+            $settings = Settings::getMain();
 
-        if (!$settings) {
+            if (!$settings) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Settings not found',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $settings,
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Settings not found',
-            ], 404);
+                'message' => 'Error fetching settings: ' . $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'data' => $settings,
-        ]);
     }
 }
