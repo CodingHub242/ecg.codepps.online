@@ -19,6 +19,8 @@ class HandleCors
         $allowedOrigins = [
             'http://localhost:8100',
             'http://127.0.0.1:8100',
+            'http://localhost:8000',
+            'http://127.0.0.1:8000',
             'https://attendance.myartsonline.com',
             'https://attendance-wasmer-app-deployments.wasmer.app',
         ];
