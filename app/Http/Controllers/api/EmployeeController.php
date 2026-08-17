@@ -17,12 +17,20 @@ class EmployeeController extends Controller
      */
     public function index(): JsonResponse
     {
-        $employees = Employee::all();
+        try {
+            $employees = Employee::all();
 
-        return response()->json([
-            'success' => true,
-            'data' => $employees,
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $employees,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching employees: ' . $e->getMessage(),
+                'data' => [],
+            ], 500);
+        }
     }
 
     /**
