@@ -40,23 +40,31 @@ class AttendanceController extends Controller
      */
     public function getByDate(Request $request): JsonResponse
     {
-        $date = $request->query('date');
+        try {
+            $date = $request->query('date');
 
-        if (!$date) {
+            if (!$date) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Date parameter is required',
+                ], 400);
+            }
+
+            $attendance = Attendance::where('date', $date)
+                ->orderBy('check_in_time', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $attendance,
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Date parameter is required',
-            ], 400);
+                'message' => 'Error fetching attendance by date: ' . $e->getMessage(),
+                'data' => [],
+            ], 500);
         }
-
-        $attendance = Attendance::where('date', $date)
-            ->orderBy('check_in_time', 'desc')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $attendance,
-        ]);
     }
 
     /**
@@ -67,26 +75,34 @@ class AttendanceController extends Controller
      */
     public function getByEmployee(string $employeeId, Request $request): JsonResponse
     {
-        $startDate = $request->query('start');
-        $endDate = $request->query('end');
+        try {
+            $startDate = $request->query('start');
+            $endDate = $request->query('end');
 
-        if (!$startDate || !$endDate) {
+            if (!$startDate || !$endDate) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Start and end date parameters are required',
+                ], 400);
+            }
+
+            $attendance = Attendance::where('employee_id', $employeeId)
+                ->where('date', '>=', $startDate)
+                ->where('date', '<=', $endDate)
+                ->orderBy('date', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $attendance,
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Start and end date parameters are required',
-            ], 400);
+                'message' => 'Error fetching employee attendance: ' . $e->getMessage(),
+                'data' => [],
+            ], 500);
         }
-
-        $attendance = Attendance::where('employee_id', $employeeId)
-            ->where('date', '>=', $startDate)
-            ->where('date', '<=', $endDate)
-            ->orderBy('date', 'desc')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $attendance,
-        ]);
     }
 
     /**
@@ -212,3 +228,4 @@ class AttendanceController extends Controller
         }
     }
 }
+
