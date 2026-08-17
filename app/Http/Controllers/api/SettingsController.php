@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Settings;
@@ -11,6 +11,7 @@ class SettingsController extends Controller
 {
     /**
      * Get the main settings.
+     * If settings don't exist, create default settings.
      * GET /api/settings
      *
      * Replaces Firebase: getSettings()
@@ -19,11 +20,16 @@ class SettingsController extends Controller
     {
         $settings = Settings::getMain();
 
+        // If settings don't exist, create default settings
         if (!$settings) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Settings not found',
-            ], 404);
+            $settings = Settings::create([
+                'key' => 'main',
+                'work_start_time' => '09:00',
+                'work_end_time' => '17:00',
+                'admin_password' => 'admin123',
+                'company_name' => 'SiobhanHub',
+                'updated_at' => now(),
+            ]);
         }
 
         return response()->json([
@@ -34,6 +40,7 @@ class SettingsController extends Controller
 
     /**
      * Update the main settings.
+     * If settings don't exist, create them.
      * PUT /api/settings
      *
      * Replaces Firebase: updateSettings()
