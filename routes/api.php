@@ -134,3 +134,4 @@ Route::post('/sync/deleted-employees', [SyncController::class, 'addDeletedEmploy
 // Bulk sync endpoint - handles full sync cycle
 // Replaces: SyncService.syncAll() which calls multiple Firebase operations
 Route::post('/sync', [SyncController::class, 'sync']);
+});
