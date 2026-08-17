@@ -26,22 +26,23 @@ class HandleCors
         ];
 
         $origin = $request->header('Origin');
+        $allowOrigin = in_array($origin, $allowedOrigins) ? $origin : '*';
 
-        if (in_array($origin, $allowedOrigins)) {
-            $response = $next($request);
-            $response->headers->set('Access-Control-Allow-Origin', $origin);
+        // Handle preflight OPTIONS requests immediately
+        if ($request->isMethod('OPTIONS')) {
+            $response = response('', 204);
+            $response->headers->set('Access-Control-Allow-Origin', $allowOrigin);
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
             $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
-            $response->headers->set('Access-Control-Allow-Credentials', 'true');
             $response->headers->set('Access-Control-Max-Age', '3600');
             return $response;
         }
 
-        // Also allow all origins as a fallback (for development)
         $response = $next($request);
-        $response->headers->set('Access-Control-Allow-Origin', '*');
+        $response->headers->set('Access-Control-Allow-Origin', $allowOrigin);
         $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
         $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
+        $response->headers->set('Access-Control-Allow-Credentials', 'true');
         $response->headers->set('Access-Control-Max-Age', '3600');
 
         return $response;
