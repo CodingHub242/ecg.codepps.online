@@ -1,11 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\api\EmployeeController;
-use App\Http\Controllers\api\AttendanceController;
-use App\Http\Controllers\api\SettingsController;
-use App\Http\Controllers\api\AuthController;
-use App\Http\Controllers\api\SyncController;
+use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\SyncController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +54,10 @@ Route::get('/employees', [EmployeeController::class, 'index']);
 // Replaces Firebase: addEmployee() -> addDoc(collection(fs, 'employees'), data)
 Route::post('/employees', [EmployeeController::class, 'store']);
 
+// Get employee by code (for check-in lookup) - MUST come before /{id}
+// Replaces: storageService.getEmployeeByCode()
+Route::get('/employees/code/{code}', [EmployeeController::class, 'getByCode']);
+
 // Get a single employee by ID
 Route::get('/employees/{id}', [EmployeeController::class, 'show']);
 
@@ -65,10 +69,6 @@ Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 // Replaces Firebase: deleteEmployee() -> deleteDoc(docRef)
 Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 
-// Get employee by code (for check-in lookup)
-// Replaces: storageService.getEmployeeByCode()
-Route::get('/employees/code/{code}', [EmployeeController::class, 'getByCode']);
-
 // ---------------------------------------------------------------------------
 // Attendance
 // ---------------------------------------------------------------------------
@@ -76,17 +76,20 @@ Route::get('/employees/code/{code}', [EmployeeController::class, 'getByCode']);
 // List all attendance records
 Route::get('/attendance', [AttendanceController::class, 'index']);
 
-// Get attendance by date
-// Replaces Firebase: getAttendanceByDate() -> query where('date', '==', date) orderBy('checkInTime', 'desc')
-Route::get('/attendance/date', [AttendanceController::class, 'getByDate']);
-
-// Get attendance by employee within a date range
-// Replaces Firebase: getAttendanceByEmployee() -> query where('employeeId', '==') where('date', '>=') where('date', '<=') orderBy('date', 'desc')
-Route::get('/attendance/employee/{employeeId}', [AttendanceController::class, 'getByEmployee']);
-
 // Create a new attendance record
 // Replaces Firebase: addAttendance() -> addDoc(collection(fs, 'attendance'), data)
 Route::post('/attendance', [AttendanceController::class, 'store']);
+
+// Get attendance by date - MUST come before /{id}
+// Replaces Firebase: getAttendanceByDate() -> query where('date', '==', date) orderBy('checkInTime', 'desc')
+Route::get('/attendance/date', [AttendanceController::class, 'getByDate']);
+
+// Get attendance by employee within a date range - MUST come before /{id}
+// Replaces Firebase: getAttendanceByEmployee() -> query where('employeeId', '==') where('date', '>=') where('date', '<=') orderBy('date', 'desc')
+Route::get('/attendance/employee/{employeeId}', [AttendanceController::class, 'getByEmployee']);
+
+// Get today's attendance summary - MUST come before /{id}
+Route::get('/attendance/today', [AttendanceController::class, 'today']);
 
 // Update an attendance record by ID
 // Replaces Firebase: updateAttendance() -> updateDoc(docRef, data)
@@ -94,9 +97,6 @@ Route::put('/attendance/{id}', [AttendanceController::class, 'update']);
 
 // Delete an attendance record by ID
 Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy']);
-
-// Get today's attendance summary (for admin dashboard stats)
-Route::get('/attendance/today', [AttendanceController::class, 'today']);
 
 // ---------------------------------------------------------------------------
 // Sync (Multi-device synchronization)
