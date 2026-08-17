@@ -1,347 +1,115 @@
 <?php
 
-
-use Illuminate\Http\Request;
-use App\Http\Controllers\api\v1;
-use App\Http\Controllers\api\v1\ReportController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\SyncController;
 
-use App\Http\Controllers\api\AuthController;
-use App\Http\Controllers\api\UserController;
-use App\Http\Controllers\api\SavingsGoalController;
-use App\Http\Controllers\api\SavingsEntryController;
-use App\Http\Controllers\api\WithdrawalEntryController;
-use App\Http\Controllers\api\ReceivedAmountController;
-use App\Http\Controllers\api\ExpenseController;
-//use App\Http\Controllers\AuthController;
-use App\Http\Controllers\TaskController;
-use App\Http\Controllers\TaskReportController;
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| These routes provide a REST API replacement for the Firebase Firestore
+| backend. Each route maps to a method in the corresponding controller.
+|
+| Base URL: https://attendance.myartsonline.com/api
+|
+*/
 
+// ---------------------------------------------------------------------------
+// Authentication
+// ---------------------------------------------------------------------------
 
-use App\Models\Theft;
-use App\Models\Fault;
-use App\Models\ElectricityRequest;
+// Admin login - validates password against settings
+// Replaces: admin-login.page.ts password check against localStorage
+Route::post('/login', [AuthController::class, 'login']);
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// Get current admin/settings info
+Route::get('/me', [AuthController::class, 'me']);
 
-Route::post('/name', function (Request $request) {
-    return 'yes';
-});
+// ---------------------------------------------------------------------------
+// Settings
+// ---------------------------------------------------------------------------
 
+// Get the main settings document
+// Replaces Firebase: getSettings() -> doc(firestore, 'settings', 'main')
+Route::get('/settings', [SettingsController::class, 'index']);
 
-Route::post('/report_theft',[v1\ReportController::class, 'theftCase']);
-Route::post('/report_fault',[v1\ReportController::class, 'FaultCase']);
-Route::post('/request_light',[v1\ReportController::class, 'Light']);
+// Update the main settings document (merge)
+// Replaces Firebase: updateSettings() -> setDoc(docRef, data, { merge: true })
+Route::put('/settings', [SettingsController::class, 'update']);
 
-Route::get('/gettheft',[v1\ReportController::class, 'GetThefts']);
+// ---------------------------------------------------------------------------
+// Employees
+// ---------------------------------------------------------------------------
 
+// List all employees
+// Replaces Firebase: getEmployees() -> getDocs(collection(fs, 'employees'))
+Route::get('/employees', [EmployeeController::class, 'index']);
 
+// Create a new employee
+// Replaces Firebase: addEmployee() -> addDoc(collection(fs, 'employees'), data)
+Route::post('/employees', [EmployeeController::class, 'store']);
 
-/////////////////APP
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/loginUser', [AuthController::class, 'login']);
+// Get a single employee by ID
+Route::get('/employees/{id}', [EmployeeController::class, 'show']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    
-    // User routes
-    Route::prefix('user')->group(function () {
-        Route::get('/profile', [UserController::class, 'profile']);
-        Route::put('/profile', [UserController::class, 'updateProfile']);
-        Route::put('/password', [UserController::class, 'updatePassword']);
-        Route::get('/dashboard', [UserController::class, 'dashboard']);
-        Route::get('/history', [UserController::class, 'history']);
-        Route::put('/net-income', [UserController::class, 'updateNetIncome']);
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/me', [AuthController::class, 'me']);
-    });
+// Update an employee by ID
+// Replaces Firebase: updateEmployee() -> updateDoc(docRef, data)
+Route::put('/employees/{id}', [EmployeeController::class, 'update']);
 
-    // Savings Goals routes
-     // Savings Goals routes
-    Route::prefix('savings-goals')->group(function () {
-        Route::get('/', [SavingsGoalController::class, 'index']);
-        Route::post('/', [SavingsGoalController::class, 'store']);
-        Route::get('/primary', [SavingsGoalController::class, 'getPrimary']);
-        Route::get('/{goalId}', [SavingsGoalController::class, 'show']);
-        Route::put('/{goalId}', [SavingsGoalController::class, 'update']);
-        Route::delete('/{goalId}', [SavingsGoalController::class, 'destroy']);
-        Route::put('/{goalId}/set-primary', [SavingsGoalController::class, 'setPrimary']);
-    });
+// Delete an employee by ID
+// Replaces Firebase: deleteEmployee() -> deleteDoc(docRef)
+Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 
-    // Savings Entries routes
-    Route::prefix('savings-entries')->group(function () {
-        Route::get('/', [SavingsEntryController::class, 'index']);
-        Route::post('/', [SavingsEntryController::class, 'store']);
-        Route::get('/total-savings', [SavingsEntryController::class, 'getTotalSavings']);
-        Route::get('/{entryId}', [SavingsEntryController::class, 'show']);
-        Route::put('/{entryId}', [SavingsEntryController::class, 'update']);
-        Route::delete('/{entryId}', [SavingsEntryController::class, 'destroy']);
-    });
+// Get employee by code (for check-in lookup)
+// Replaces: storageService.getEmployeeByCode()
+Route::get('/employees/code/{code}', [EmployeeController::class, 'getByCode']);
 
-    // Withdrawal Entries routes
-    Route::prefix('withdrawal-entries')->group(function () {
-        Route::get('/', [WithdrawalEntryController::class, 'index']);
-        Route::post('/', [WithdrawalEntryController::class, 'store']);
-        Route::get('/{entryId}', [WithdrawalEntryController::class, 'show']);
-        Route::put('/{entryId}', [WithdrawalEntryController::class, 'update']);
-        Route::delete('/{entryId}', [WithdrawalEntryController::class, 'destroy']);
-    });
+// ---------------------------------------------------------------------------
+// Attendance
+// ---------------------------------------------------------------------------
 
-    // Alternative route structure for frontend compatibility
-    Route::prefix('savings')->group(function () {
-        // Goals
-        Route::get('/goals', [SavingsGoalController::class, 'index']);
-        Route::post('/goals', [SavingsGoalController::class, 'store']);
-        Route::get('/goals/primary', [SavingsGoalController::class, 'getPrimary']);
-        Route::put('/goals/{savingsGoal}', [SavingsGoalController::class, 'update']);
-        Route::delete('/goals/{savingsGoal}', [SavingsGoalController::class, 'destroy']);
-        Route::put('/goals/{savingsGoal}/primary', [SavingsGoalController::class, 'setPrimary']);
-        
-        // Entries
-        Route::get('/entries', [SavingsEntryController::class, 'index']);
-        Route::post('/entries', [SavingsEntryController::class, 'store']);
-        Route::put('/entries/{savingsEntry}', [SavingsEntryController::class, 'update']);
-        Route::delete('/entries/{savingsEntry}', [SavingsEntryController::class, 'destroy']);
-        
-        // Total
-        Route::get('/total', [SavingsEntryController::class, 'getTotalSavings']);
-    });
+// List all attendance records
+Route::get('/attendance', [AttendanceController::class, 'index']);
 
-    Route::prefix('withdrawals')->group(function () {
-        Route::get('/', [WithdrawalEntryController::class, 'index']);
-        Route::post('/', [WithdrawalEntryController::class, 'store']);
-        Route::put('/{withdrawalEntry}', [WithdrawalEntryController::class, 'update']);
-        Route::delete('/{withdrawalEntry}', [WithdrawalEntryController::class, 'destroy']);
-    });
-});
+// Get attendance by date
+// Replaces Firebase: getAttendanceByDate() -> query where('date', '==', date) orderBy('checkInTime', 'desc')
+Route::get('/attendance/date', [AttendanceController::class, 'getByDate']);
 
-// Fallback route for API
-Route::fallback(function () {
-    return response()->json([
-        'success' => false,
-        'message' => 'API endpoint not found'
-    ], 404);
-});
+// Get attendance by employee within a date range
+// Replaces Firebase: getAttendanceByEmployee() -> query where('employeeId', '==') where('date', '>=') where('date', '<=') orderBy('date', 'desc')
+Route::get('/attendance/employee/{employeeId}', [AttendanceController::class, 'getByEmployee']);
 
+// Create a new attendance record
+// Replaces Firebase: addAttendance() -> addDoc(collection(fs, 'attendance'), data)
+Route::post('/attendance', [AttendanceController::class, 'store']);
 
-Route::post('getStatus',function(Request $request){
-  
-   $theft =  Theft::where('requestID',$request->stat)->get();
-   $fault =  Fault::where('requestID',$request->stat)->get();
-   $light =  ElectricityRequest::where('requestID',$request->stat)->get();
-   
-  // dd($light);
-   
+// Update an attendance record by ID
+// Replaces Firebase: updateAttendance() -> updateDoc(docRef, data)
+Route::put('/attendance/{id}', [AttendanceController::class, 'update']);
 
-   if($theft)
-   {
-       foreach($theft as $t)
-       {
-            $date = new DateTime($t->date_stolen);
-            $dated = $date->format("l, F j, Y");
-            return response()->json(['success' => true,'msg'=>'The status of your theft report placed on '.$dated.' currently is','stat'=>$t->status], 200); 
-       }
-        
-   }
-   else
-   {
-       return response()->json(['success' => false], 200);
-   }
-   
-   
-   if($fault)
-   {
-       foreach($fault as $t)
-       {
-            $d = date('F j, Y, g:i a', strtotime($t->created_at));
-            return response()->json(['success' => true,'msg'=>'The status of your fault report placed on '.$d.' currently is','stat'=>$t->status], 200);
-       }
-   }
-   else
-   {
-       return response()->json(['success' => false], 200);
-   }
-   
-   
-   if($light)
-   {
-      // dd('yes');
-       foreach($light as $t)
-       {
-           $d = date('F j, Y, g:i a', strtotime($t->created_at));
-            return response()->json(['success' => true,'msg'=>'The status of your electricity request placed on '.$d.' currently is','stat'=>$t->status], 200);
-       }
-   }
-   else
-   {
-       return response()->json(['success' => false], 200);
-   }
-  // return view('viewtheft',compact('theft'));
-});
+// Delete an attendance record by ID
+Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy']);
 
+// Get today's attendance summary (for admin dashboard stats)
+Route::get('/attendance/today', [AttendanceController::class, 'today']);
 
-Route::post('getReports',function(Request $request){
-  
-    if($request->period=='General')
-    {
-        if($request->type=='Thefts')
-        {
-            //get from thefts
-            $theft =  Theft::all();
-            $tcount = Theft::count();
-            
-            return response()->json(['success' => true,'count'=>$tcount,'resp'=>$theft], 200); 
-        }
-        
-        if($request->type=='Faults')
-        {
-            //get from faults
-            $theft =  Fault::all();
-            $tcount = Fault::count();
-            
-            return response()->json(['success' => true,'count'=>$tcount,'resp'=>$theft], 200); 
-        }
-        
-        if($request->type=='Electricity Requests')
-        {
-            //get from electricityreq
-            $theft =  ElectricityRequest::all();
-            $tcount = ElectricityRequest::count();
-            
-            return response()->json(['success' => true,'count'=>$tcount,'resp'=>$theft], 200); 
-        }
-    }
-    else///Between Dates
-    {
-        if($request->type=='Thefts')
-        {
-            //get from thefts
-            $theft =  Theft::whereBetween('created_at', [$request->from, $request->to])->get();
-            $tcount = Theft::whereBetween('created_at', [$request->from, $request->to])->count();
-            
-            return response()->json(['success' => true,'count'=>$tcount,'resp'=>$theft], 200); 
-        }
-        
-        if($request->type=='Faults')
-        {
-            //get from thefts
-            $theft =  Fault::whereBetween('created_at', [$request->from, $request->to])->get();
-            $tcount = Fault::whereBetween('created_at', [$request->from, $request->to])->count();
-            
-            return response()->json(['success' => true,'count'=>$tcount,'resp'=>$theft], 200); 
-        }
-        
-        
-        if($request->type=='Electricity Requests')
-        {
-            //get from thefts
-            $theft =  ElectricityRequest::whereBetween('created_at', [$request->from, $request->to])->get();
-            $tcount = ElectricityRequest::whereBetween('created_at', [$request->from, $request->to])->count();
-            
-            return response()->json(['success' => true,'count'=>$tcount,'resp'=>$theft], 200); 
-        }
-        
-        // $results = ModelName::whereBetween('column_name', [start_value, end_value])->get();
-    }
-    
-    
-    
-    
-    
-    
-    
-    
+// ---------------------------------------------------------------------------
+// Sync (Multi-device synchronization)
+// ---------------------------------------------------------------------------
 
-   
-});
+// Get all deleted employee IDs
+// Replaces Firebase: getDeletedEmployeeIds() -> getDocs(collection(fs, 'deleted_employees'))
+Route::get('/sync/deleted-employees', [SyncController::class, 'getDeletedEmployees']);
 
- Route::post('auth/register', [App\Http\Controllers\AuthController::class, 'register']);
-    Route::post('auth/login', [App\Http\Controllers\AuthController::class, 'login']);
+// Record a deleted employee ID
+// Replaces Firebase: addDeletedEmployeeId() -> addDoc(collection(fs, 'deleted_employees'), data)
+Route::post('/sync/deleted-employees', [SyncController::class, 'addDeletedEmployee']);
 
-
-    // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
-        // Auth
-        Route::post('/received-amounts/addmore/add', [ReceivedAmountController::class, 'addMore']);
-      
-        Route::get('/user', [App\Http\Controllers\AuthController::class, 'me']);
-        Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout']);
-        Route::put('/user/profile', [App\Http\Controllers\AuthController::class, 'updateProfile']);
-        Route::put('/user/device-token', [App\Http\Controllers\AuthController::class, 'updateDeviceToken']);
-        
-        
-        
-         // User profile routes
-        Route::get('/profile', [App\Http\Controllers\AuthController::class, 'profile']);
-        Route::post('/profile', [App\Http\Controllers\AuthController::class, 'updateProfile']);
-        
-         Route::post('/users/{user}', [App\Http\Controllers\AuthController::class, 'updateProfile']);
-        // Avatar routes
-        Route::post('/users/{user}/avatar', [App\Http\Controllers\AuthController::class, 'uploadAvatar']);
-        Route::delete('/users/{user}/avatar', [App\Http\Controllers\AuthController::class, 'removeAvatar']);
-        // Password routes
-        Route::post('/password/change', [App\Http\Controllers\AuthController::class, 'changePassword']);
-        
-        
-    
-        // Employee routes (accessible by all authenticated users)
-        Route::get('/users', [App\Http\Controllers\AuthController::class, 'getEmployees']);
-        Route::get('/users/{user}', [App\Http\Controllers\AuthController::class, 'getEmployee']);
-    
-        // Dashboard routes
-        Route::get('/dashboard/admin', [App\Http\Controllers\AuthController::class, 'adminDashboard']);
-        Route::get('/dashboard/employee', [App\Http\Controllers\AuthController::class, 'employeeDashboard']);
-        
-        // Analytics export endpoints
-        Route::get('/analytics/export', [TaskController::class, 'exportAnalytics']);
-        Route::get('/reports/employee/{employeeId}', [TaskController::class, 'exportEmployeeReport']);
-    
-        // Task routes
-        Route::prefix('/tasks')->group(function () {
-            Route::get('/', [TaskController::class, 'index']);
-            Route::post('/', [TaskController::class, 'store']);
-            Route::get('/{task}', [TaskController::class, 'show']);
-            Route::put('/{task}', [TaskController::class, 'update']);
-            Route::delete('/{task}', [TaskController::class, 'destroy']);
-            Route::put('/{task}/status', [TaskController::class, 'updateStatus']);
-            
-             // Task approval endpoints
-            Route::post('/{task}/approve', [TaskController::class, 'approve']);
-            Route::post('/{task}/deny', [TaskController::class, 'deny']);
-            Route::get('/pending-approvals', [TaskController::class, 'pendingApprovals']);
-    
-            Route::get('/date/{date}', [TaskController::class, 'getByDate']);
-        });
-    
-        // Task Report routes
-        Route::prefix('/task-reports')->group(function () {
-            Route::get('/', [TaskReportController::class, 'index']);
-            Route::post('/', [TaskReportController::class, 'store']);
-            Route::get('/{report}', [TaskReportController::class, 'show']);
-            Route::get('/task/{taskId}', [TaskReportController::class, 'getByTask']);
-        });
-        
-        // Received Amounts routes
-        Route::prefix('received-amounts')->group(function () {
-            Route::get('/', [ReceivedAmountController::class, 'index']);
-            Route::post('/', [ReceivedAmountController::class, 'store']);
-           
-            Route::get('/{id}', [ReceivedAmountController::class, 'show']);
-            Route::put('/{id}', [ReceivedAmountController::class, 'update']);
-            
-            Route::delete('/{id}', [ReceivedAmountController::class, 'destroy']);
-        });
-        
-        
-    
-        // Expenses routes (nested under received amounts)
-        Route::prefix('received-amounts/{receivedAmountId}/expenses')->group(function () {
-            Route::get('/', [ExpenseController::class, 'index']);
-            Route::post('/', [ExpenseController::class, 'store']);
-            Route::get('/{id}', [ExpenseController::class, 'show']);
-            Route::put('/{id}', [ExpenseController::class, 'update']);
-            Route::delete('/{id}', [ExpenseController::class, 'destroy']);
-        });
-    });
+// Bulk sync endpoint - handles full sync cycle
+// Replaces: SyncService.syncAll() which calls multiple Firebase operations
+Route::post('/sync', [SyncController::class, 'sync']);
