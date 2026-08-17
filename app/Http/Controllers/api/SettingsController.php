@@ -18,24 +18,32 @@ class SettingsController extends Controller
      */
     public function index(): JsonResponse
     {
-        $settings = Settings::getMain();
+        try {
+            $settings = Settings::getMain();
 
-        // If settings don't exist, create default settings
-        if (!$settings) {
-            $settings = Settings::create([
-                'setting_key' => 'main',
-                'work_start_time' => '09:00',
-                'work_end_time' => '17:00',
-                'admin_password' => 'admin123',
-                'company_name' => 'SiobhanHub',
-                'updated_at' => now(),
+            // If settings don't exist, create default settings
+            if (!$settings) {
+                $settings = Settings::create([
+                    'setting_key' => 'main',
+                    'work_start_time' => '09:00',
+                    'work_end_time' => '17:00',
+                    'admin_password' => 'admin123',
+                    'company_name' => 'SiobhanHub',
+                    'updated_at' => now(),
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $settings,
             ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching settings: ' . $e->getMessage(),
+                'data' => null,
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'data' => $settings,
-        ]);
     }
 
     /**
@@ -73,4 +81,5 @@ class SettingsController extends Controller
         ]);
     }
 }
+
 
