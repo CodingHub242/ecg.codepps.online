@@ -22,24 +22,24 @@ use App\Http\Controllers\Api\SyncController;
 // CORS Handling (inline middleware - works without Kernel/bootstrap changes)
 // ---------------------------------------------------------------------------
 // Handle CORS preflight requests
-Route::options('/{any}', function () {
-    $response = response('', 204);
-    $response->headers->set('Access-Control-Allow-Origin', '*');
-    $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
-    $response->headers->set('Access-Control-Max-Age', '3600');
-    return $response;
-})->where('any', '.*');
+// Route::options('/{any}', function () {
+//     $response = response('', 204);
+//     $response->headers->set('Access-Control-Allow-Origin', '*');
+//     $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+//     $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
+//     $response->headers->set('Access-Control-Max-Age', '3600');
+//     return $response;
+// })->where('any', '.*');
 
-// Add CORS headers to all API responses via middleware closure
-Route::middleware(function ($request, $next) {
-    $response = $next($request);
-    $response->headers->set('Access-Control-Allow-Origin', '*');
-    $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
-    $response->headers->set('Access-Control-Max-Age', '3600');
-    return $response;
-})->group(function () {
+// // Add CORS headers to all API responses via middleware closure
+// Route::middleware(function ($request, $next) {
+//     $response = $next($request);
+//     $response->headers->set('Access-Control-Allow-Origin', '*');
+//     $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+//     $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
+//     $response->headers->set('Access-Control-Max-Age', '3600');
+//     return $response;
+// })->group(function () {
 // ---------------------------------------------------------------------------
 // Authentication
 // ---------------------------------------------------------------------------
@@ -134,4 +134,4 @@ Route::post('/sync/deleted-employees', [SyncController::class, 'addDeletedEmploy
 // Bulk sync endpoint - handles full sync cycle
 // Replaces: SyncService.syncAll() which calls multiple Firebase operations
 Route::post('/sync', [SyncController::class, 'sync']);
-});
+//});
