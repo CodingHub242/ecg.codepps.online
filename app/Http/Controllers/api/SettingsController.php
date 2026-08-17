@@ -52,7 +52,7 @@ class SettingsController extends Controller
         if (!$settings) {
             // Create if doesn't exist
             $settings = new Settings();
-            $settings->key = 'main';
+            $settings->setting_key = 'main';
         }
 
         $validated = $request->validate([
