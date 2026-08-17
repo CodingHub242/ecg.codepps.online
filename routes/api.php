@@ -24,9 +24,24 @@ use App\Http\Middleware\HandleCors;
 // ---------------------------------------------------------------------------
 // Handle CORS preflight requests
 
-Route::options('/{any}', function () {
+// CORS Handling
+// ---------------------------------------------------------------------------
+// Handle CORS preflight requests (OPTIONS)
+Route::options('/{any}', function (Illuminate\Http\Request $request) {
+    $allowedOrigins = [
+        'http://localhost:8100',
+        'http://127.0.0.1:8100',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        'https://attendance.myartsonline.com',
+        'https://attendance-wasmer-app-deployments.wasmer.app',
+    ];
+
+    $origin = $request->header('Origin');
+    $allowOrigin = in_array($origin, $allowedOrigins) ? $origin : '*';
+
     $response = response('', 204);
-    $response->headers->set('Access-Control-Allow-Origin', '*');
+    $response->headers->set('Access-Control-Allow-Origin', $allowOrigin);
     $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
     $response->headers->set('Access-Control-Max-Age', '3600');
