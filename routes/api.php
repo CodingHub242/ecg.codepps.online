@@ -1,11 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\EmployeeController;
-use App\Http\Controllers\Api\AttendanceController;
-use App\Http\Controllers\Api\SettingsController;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\SyncController;
+use App\Http\Controllers\api\EmployeeController;
+use App\Http\Controllers\api\AttendanceController;
+use App\Http\Controllers\api\SettingsController;
+use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\api\SyncController;
 
 /*
 |--------------------------------------------------------------------------
