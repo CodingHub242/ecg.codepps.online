@@ -11,7 +11,7 @@ class Settings extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'key',
+        'setting_key',
         'work_start_time',
         'work_end_time',
         'admin_password',
@@ -24,10 +24,10 @@ class Settings extends Model
     ];
 
     /**
-     * Get the main settings record (key = 'main').
+     * Get the main settings record (setting_key = 'main').
      */
     public static function getMain(): ?self
     {
-        return self::where('key', 'main')->first();
+        return self::where('setting_key', 'main')->first();
     }
 }
