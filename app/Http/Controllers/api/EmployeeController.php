@@ -52,6 +52,31 @@ class EmployeeController extends Controller
 
         $employee = Employee::create($validated);
 
+         //sms alert
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://sms.arkesel.com/api/v2/sms/send',
+            CURLOPT_HTTPHEADER => ['api-key: ZFRDQVFUVlZyQ0t1c3NsRllNc1U'],
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => http_build_query([
+                'sender' => 'AlertNote',
+                'message' => "This is your personal employee code to checkin always ".$request->code,
+                'recipients' => [$request->email],
+                // When sending SMS to Nigerian recipients, specify the use_case field
+                // 'use_case' => 'transactional'
+            ]),
+        ]);
+
+        $response = curl_exec($curl);
+        curl_close($curl);
+
         return response()->json([
             'success' => true,
             'message' => 'Employee created successfully',
