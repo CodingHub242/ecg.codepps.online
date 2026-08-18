@@ -157,11 +157,12 @@ class EmployeeController extends Controller
             ], 404);
         }
 
-        \DB::table('deleted_employees')->insert([
-            'employee_id' => $employee->code,
-        ]);
-        
+        $employeeCode = $employee->code;
         $employee->delete();
+
+          \DB::table('deleted_employees')->insert([
+            'employee_id' => $employeeCode,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -169,7 +170,7 @@ class EmployeeController extends Controller
         ]);
     }
 
-    /**
+/**
      * Get employee by code (used for check-in lookup).
      * GET /api/employees/code/{code}
      */
@@ -189,6 +190,34 @@ class EmployeeController extends Controller
         return response()->json([
             'success' => true,
             'data' => $employee,
+        ]);
+    }
+    
+    /**
+     * Remove the specified employee by code.
+     * DELETE /api/employees/code/{code}
+     */
+    public function destroyByCode(string $code): JsonResponse
+    {
+        $employee = Employee::where('code', $code)->first();
+
+        if (!$employee) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee not found',
+            ], 404);
+        }
+
+        $employee->delete();
+
+        //insert into deleted_employees table for record keeping
+        \DB::table('deleted_employees')->insert([
+            'employee_code' => $code,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Employee deleted successfully',
         ]);
     }
 }
