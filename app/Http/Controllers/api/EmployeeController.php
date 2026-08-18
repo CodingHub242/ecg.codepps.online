@@ -160,9 +160,9 @@ class EmployeeController extends Controller
         $employeeCode = $employee->code;
         $employee->delete();
 
-          \DB::table('deleted_employees')->insert([
-            'employee_id' => $employeeCode,
-        ]);
+        //   \DB::table('deleted_employees')->insert([
+        //     'employee_id' => $employeeCode,
+        // ]);
 
         return response()->json([
             'success' => true,
