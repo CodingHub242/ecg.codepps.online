@@ -134,14 +134,6 @@ class EmployeeController extends Controller
 
         \DB::table('deleted_employees')->insert([
             'employee_id' => $id,
-            'code' => $employee->code,
-            'name' => $employee->name,
-            'email' => $employee->email,
-            'department' => $employee->department,
-            'position' => $employee->position,
-            'is_active' => $employee->is_active,
-            'created_at' => $employee->created_at,
-            'updated_at' => $employee->updated_at,
         ]);
         
         $employee->delete();
