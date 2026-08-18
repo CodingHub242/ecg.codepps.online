@@ -21,7 +21,7 @@ class SyncController extends Controller
     public function getDeletedEmployees(): JsonResponse
     {
         try {
-            $deletedIds = DeletedEmployee::pluck('employee_id')->toArray();
+            $deletedIds = DeletedEmployee::pluck('code')->toArray();
 
             return response()->json([
                 'success' => true,
@@ -49,8 +49,10 @@ class SyncController extends Controller
                 'employee_id' => 'required|string',
             ]);
 
+            $employee = Employee::find($validated['employee_id']);
+
             DeletedEmployee::create([
-                'employee_id' => $validated['employee_id'],
+                'employee_id' => $employee->code,
                 'deleted_at' => now(),
             ]);
 
