@@ -114,7 +114,7 @@ class AttendanceController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'employeeId' => 'required|exists:employees,id',
+            'employee_id' => 'required|exists:employees,id',
             'employee_code' => 'nullable|string|max:255',
             'employee_name' => 'nullable|string|max:255',
             'date' => 'required|date',
