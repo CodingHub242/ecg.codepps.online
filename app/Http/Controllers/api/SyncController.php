@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 class SyncController extends Controller
 {
     /**
-     * Get all deleted employee IDs (for multi-device sync).
+     * Get all deleted employee codes (for multi-device sync).
      * GET /api/sync/deleted-employees
      *
      * Replaces Firebase: getDeletedEmployeeIds()
@@ -21,11 +21,11 @@ class SyncController extends Controller
     public function getDeletedEmployees(): JsonResponse
     {
         try {
-            $deletedIds = DeletedEmployee::pluck('code')->toArray();
+            $deletedCodes = DeletedEmployee::pluck('employee_code')->toArray();
 
             return response()->json([
                 'success' => true,
-                'data' => $deletedIds,
+                'data' => $deletedCodes,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -37,7 +37,7 @@ class SyncController extends Controller
     }
 
     /**
-     * Record a deleted employee ID (for multi-device sync).
+     * Record a deleted employee code (for multi-device sync).
      * POST /api/sync/deleted-employees
      *
      * Replaces Firebase: addDeletedEmployeeId()
@@ -46,19 +46,17 @@ class SyncController extends Controller
     {
         try {
             $validated = $request->validate([
-                'employee_id' => 'required|string',
+                'employee_code' => 'required|string',
             ]);
 
-            $employee = Employee::find($validated['employee_id']);
-
             DeletedEmployee::create([
-                'employee_id' => $employee->code,
+                'employee_code' => $validated['employee_code'],
                 'deleted_at' => now(),
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Deleted employee ID recorded',
+                'message' => 'Deleted employee code recorded',
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -97,8 +95,8 @@ class SyncController extends Controller
             'attendance.*.check_out_time' => 'nullable|date',
             'attendance.*.status' => 'in:present,absent,late,early',
             'attendance.*.synced' => 'boolean',
-            'deleted_employee_ids' => 'array',
-            'deleted_employee_ids.*' => 'string',
+            'deleted_employee_codes' => 'array',
+            'deleted_employee_codes.*' => 'string',
         ]);
 
         DB::beginTransaction();
@@ -138,15 +136,15 @@ class SyncController extends Controller
                 );
             }
 
-            // 3. Process deleted employee IDs
-            $deletedIds = $validated['deleted_employee_ids'] ?? [];
-            foreach ($deletedIds as $empId) {
+            // 3. Process deleted employee codes
+            $deletedCodes = $validated['deleted_employee_codes'] ?? [];
+            foreach ($deletedCodes as $empCode) {
                 // Delete the employee if it exists
-                Employee::where('id', $empId)->delete();
+                Employee::where('code', $empCode)->delete();
 
                 // Record in deleted_employees table (avoid duplicates)
                 DeletedEmployee::firstOrCreate(
-                    ['employee_id' => $empId],
+                    ['employee_code' => $empCode],
                     ['deleted_at' => now()]
                 );
             }
@@ -154,7 +152,7 @@ class SyncController extends Controller
             // 4. Return all remote data
             $remoteEmployees = Employee::all();
             $remoteAttendance = Attendance::all();
-            $remoteDeletedIds = DeletedEmployee::pluck('employee_id')->toArray();
+            $remoteDeletedCodes = DeletedEmployee::pluck('employee_code')->toArray();
             $remoteSettings = \App\Models\Settings::getMain();
 
             DB::commit();
@@ -165,7 +163,7 @@ class SyncController extends Controller
                 'data' => [
                     'employees' => $remoteEmployees,
                     'attendance' => $remoteAttendance,
-                    'deleted_employee_ids' => $remoteDeletedIds,
+                    'deleted_employee_codes' => $remoteDeletedCodes,
                     'settings' => $remoteSettings,
                 ],
             ]);
