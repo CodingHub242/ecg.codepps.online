@@ -11,7 +11,7 @@ class DeletedEmployee extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'employee_id',
+        'employee_code',
         'deleted_at',
     ];
 
