@@ -158,7 +158,7 @@ class EmployeeController extends Controller
         }
 
         \DB::table('deleted_employees')->insert([
-            'employee_id' => $id,
+            'employee_id' => $employee->code,
         ]);
         
         $employee->delete();
