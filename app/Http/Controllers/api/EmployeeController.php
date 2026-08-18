@@ -66,7 +66,7 @@ class EmployeeController extends Controller
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => http_build_query([
-                'sender' => 'AlertNote',
+                'sender' => 'Siobhan',
                 'message' => "This is your personal employee code to checkin always ".$request->code,
                 'recipients' => [$request->email],
                 // When sending SMS to Nigerian recipients, specify the use_case field
